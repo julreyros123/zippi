@@ -4,6 +4,7 @@
   "description": "Zippi backend server",
   "main": "src/server.js",
   "scripts": {
+    "build": "npx prisma generate && npx prisma db push",
     "start": "node src/server.js",
     "dev": "nodemon src/server.js"
   },
