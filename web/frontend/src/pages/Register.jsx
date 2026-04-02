@@ -1,43 +1,15 @@
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
-function getPasswordStrength(password) {
-  let score = 0;
-  const checks = {
-    length:   password.length >= 8,
-    upper:    /[A-Z]/.test(password),
-    lower:    /[a-z]/.test(password),
-    number:   /[0-9]/.test(password),
-    special:  /[^A-Za-z0-9]/.test(password),
-  };
-  score = Object.values(checks).filter(Boolean).length;
-  if (score <= 1) return { score, label: 'Very Weak', color: 'bg-red-500', textColor: 'text-red-400' };
-  if (score === 2) return { score, label: 'Weak', color: 'bg-orange-500', textColor: 'text-orange-400' };
-  if (score === 3) return { score, label: 'Fair', color: 'bg-yellow-500', textColor: 'text-yellow-400' };
-  if (score === 4) return { score, label: 'Strong', color: 'bg-blue-500', textColor: 'text-blue-400' };
-  return { score, label: 'Very Strong', color: 'bg-emerald-500', textColor: 'text-emerald-400' };
-}
-
-const CRITERIA = [
-  { key: 'length',  label: 'At least 8 characters', test: (p) => p.length >= 8 },
-  { key: 'upper',   label: 'Uppercase letter',       test: (p) => /[A-Z]/.test(p) },
-  { key: 'lower',   label: 'Lowercase letter',       test: (p) => /[a-z]/.test(p) },
-  { key: 'number',  label: 'Number',                 test: (p) => /[0-9]/.test(p) },
-  { key: 'special', label: 'Special character',      test: (p) => /[^A-Za-z0-9]/.test(p) },
-];
-
 export default function Register() {
   const [username, setUsername] = useState('');
   const [nickname, setNickname] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [showCriteria, setShowCriteria] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const login = useAuthStore((state) => state.login);
-
-  const strength = getPasswordStrength(password);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -176,37 +148,12 @@ export default function Register() {
                   className="w-full bg-gray-950 border border-gray-800 text-white rounded pl-11 pr-12 py-3.5 focus:outline-none   focus:border-blue-500 transition-all text-sm placeholder-gray-600 shadow-sm"
                   placeholder="Min. 8 characters"
                   value={password}
-                  onChange={(e) => { setPassword(e.target.value); setShowCriteria(true); }}
+                  onChange={(e) => setPassword(e.target.value)}
                 />
                 <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-500 hover:text-gray-300 transition-colors">
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
-
-              {/* Password strength bar */}
-              {showCriteria && password.length > 0 && (
-                <div className="mt-3 bg-gray-900/80 p-3 rounded-lg border border-gray-800/80">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex gap-1 flex-1">
-                      {[1, 2, 3, 4, 5].map(i => (
-                        <div key={i} className={`h-1.5 flex-1 rounded-full transition-all duration-500 ${i <= strength.score ? strength.color : 'bg-gray-800'}`} />
-                      ))}
-                    </div>
-                    <span className={`text-[10px] uppercase tracking-wide font-bold ml-3 ${strength.textColor}`}>{strength.label}</span>
-                  </div>
-                  <div className="grid grid-cols-2 gap-x-2 gap-y-1.5">
-                    {CRITERIA.map(c => {
-                      const ok = c.test(password);
-                      return (
-                        <div key={c.key} className={`flex items-center gap-1.5 text-[11px] sm:text-xs transition-colors duration-300 ${ok ? 'text-emerald-400 font-medium' : 'text-gray-500'}`}>
-                          {ok ? <CheckCircle2 size={13} /> : <XCircle size={13} />}
-                          {c.label}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
             </div>
 
             {/* Submit */}
