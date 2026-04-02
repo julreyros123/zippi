@@ -1,0 +1,131 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  username  String   @unique
+  email     String   @unique
+  password  String
+  nickname  String?
+  bio       String?
+  subject             String?
+  resetCode           String?
+  resetCodeExpiresAt  DateTime?
+  createdAt           DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  messages      Message[]
+  channels      ChannelMember[]
+  reactions     Reaction[]
+  events        Event[]
+  announcements Announcement[]
+  connectionsA  Connection[]    @relation("ConnectorA")
+  connectionsB  Connection[]    @relation("ConnectorB")
+}
+
+model Channel {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  tags        String?
+  isPrivate   Boolean  @default(false)
+  notebook    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  messages    Message[]
+  members     ChannelMember[]
+}
+
+model ChannelMember {
+  userId    String
+  channelId String
+  role      String   @default("MEMBER")
+  isMuted   Boolean  @default(false)
+  joinedAt  DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id])
+  channel   Channel  @relation(fields: [channelId], references: [id])
+
+  @@id([userId, channelId])
+}
+
+model Message {
+  id        String   @id @default(uuid())
+  content   String?
+  fileUrl   String?
+  fileType  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId    String
+  channelId String
+  replyToId String?
+
+  user      User       @relation(fields: [userId], references: [id])
+  channel   Channel    @relation(fields: [channelId], references: [id])
+  replyTo   Message?   @relation("ThreadReplies", fields: [replyToId], references: [id])
+  replies   Message[]  @relation("ThreadReplies")
+  reactions Reaction[]
+}
+
+model Reaction {
+  id        String   @id @default(uuid())
+  emoji     String
+  createdAt DateTime @default(now())
+
+  userId    String
+  messageId String
+
+  user      User     @relation(fields: [userId], references: [id])
+  message   Message  @relation(fields: [messageId], references: [id])
+
+  @@unique([userId, messageId, emoji])
+}
+
+model Event {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  emoji       String   @default("📅")
+  scheduledAt DateTime
+  createdAt   DateTime @default(now())
+
+  creatorId   String
+  creator     User     @relation(fields: [creatorId], references: [id])
+}
+
+model Announcement {
+  id        String   @id @default(uuid())
+  title     String?
+  content   String
+  badge     String   @default("Notice")
+  fileUrls  String?  // JSON array of file URLs
+  fileTypes String?  // JSON array of mime types
+  createdAt DateTime @default(now())
+
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id])
+}
+
+model Connection {
+  id          String   @id @default(uuid())
+  status      String   @default("PENDING")  // PENDING | ACCEPTED
+  createdAt   DateTime @default(now())
+
+  userAId     String
+  userBId     String
+
+  userA       User     @relation("ConnectorA", fields: [userAId], references: [id])
+  userB       User     @relation("ConnectorB", fields: [userBId], references: [id])
+
+  @@unique([userAId, userBId])
+}

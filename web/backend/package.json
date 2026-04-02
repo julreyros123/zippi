@@ -1,0 +1,30 @@
+{
+  "name": "zippi-backend",
+  "version": "1.0.0",
+  "description": "Zippi backend server",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.0.0",
+    "bcrypt": "^5.1.0",
+    "cloudinary": "^1.41.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "express-rate-limit": "^8.3.1",
+    "express-validator": "^7.3.1",
+    "helmet": "^8.1.0",
+    "hpp": "^0.2.3",
+    "jsonwebtoken": "^9.0.1",
+    "multer": "^2.1.1",
+    "multer-storage-cloudinary": "^4.0.0",
+    "socket.io": "^4.7.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1",
+    "prisma": "^5.0.0"
+  }
+}

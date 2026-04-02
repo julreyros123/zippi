@@ -1,0 +1,7 @@
+
+C:\Users\acer laptop\.gemini\antigravity\scratch\zippi\web\frontend\src\pages\Dashboard.jsx
+  983:28  error  'Moon' is not defined  react/jsx-no-undef
+  988:28  error  'Sun' is not defined   react/jsx-no-undef
+
+Γ£û 2 problems (2 errors, 0 warnings)
+
