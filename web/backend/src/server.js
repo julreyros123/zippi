@@ -29,7 +29,7 @@ app.use(cors({
   origin: function (origin, callback) {
     // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
-    if (origin.startsWith('http://localhost:') || origin === ALLOWED_ORIGIN || origin.startsWith('exp://')) {
+    if (origin.startsWith('http://localhost:') || origin === ALLOWED_ORIGIN || origin.startsWith('exp://') || origin.includes('vercel.app')) {
       return callback(null, true);
     }
     return callback(new Error('Not allowed by CORS'), false);
@@ -67,7 +67,7 @@ const io = new Server(server, {
   cors: {
     origin: function (origin, callback) {
       if (!origin) return callback(null, true);
-      if (origin.startsWith('http://localhost:') || origin === ALLOWED_ORIGIN || origin.startsWith('exp://')) {
+      if (origin.startsWith('http://localhost:') || origin === ALLOWED_ORIGIN || origin.startsWith('exp://') || origin.includes('vercel.app')) {
         return callback(null, true);
       }
       return callback(new Error('Not allowed by CORS'), false);
