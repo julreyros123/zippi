@@ -1,3 +1,9 @@
+import React, { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import useAuthStore from '../store/authStore';
+import axios from 'axios';
+import { UserPlus, Mail, Lock, User, Eye, EyeOff } from 'lucide-react';
+
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 export default function Register() {
