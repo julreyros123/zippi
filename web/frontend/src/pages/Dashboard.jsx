@@ -1151,6 +1151,11 @@ export default function Dashboard() {
                   </div>
                 </div>
               </div>
+
+              {/* About App */}
+              <div className="h-px bg-gray-800 my-5" />
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">About</p>
+              <div className="bg-gray-800 rounded border border-gray-700/50 divide-y divide-gray-700/60 mb-10">
                 <div className="p-4 flex items-center justify-between">
                   <p className="text-sm text-gray-400">Version</p>
                   <span className="text-xs font-mono bg-gray-900 border border-gray-700 px-2 py-1 rounded text-gray-400">Zippi v1.0.0</span>
