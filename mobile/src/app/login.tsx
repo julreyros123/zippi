@@ -1,4 +1,4 @@
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import useAuthStore from '../store/authStore';
@@ -7,14 +7,17 @@ import { API_URL } from '../constants/Config';
 export default function Login() {
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const { login } = useAuthStore();
 
   const handleLogin = async () => {
     const trimmedIdentifier = identifier.trim();
+    setError('');
+
     if (!trimmedIdentifier || !password) {
-      Alert.alert('Missing fields', 'Please enter your email/username and password.');
+      setError('Please enter your email/username and password.');
       return;
     }
 
@@ -31,15 +34,15 @@ export default function Login() {
         router.replace('/chat');
       } else {
         if (res.status === 401) {
-          Alert.alert('Sign in failed', 'Invalid email/username or password.');
+          setError('Invalid email/username or password.');
         } else if (res.status === 429) {
-          Alert.alert('Too many attempts', 'Please wait a few minutes and try again.');
+          setError('Too many attempts. Please wait a few minutes and try again.');
         } else {
-          Alert.alert('Sign in failed', data.error || 'Please try again.');
+          setError(data.error || 'Sign in failed. Please try again.');
         }
       }
     } catch (e) {
-      Alert.alert('Connection issue', 'Could not connect to server. Check internet and try again.');
+      setError('Cannot connect to server. Check internet and try again.');
     } finally {
       setLoading(false);
     }
@@ -50,57 +53,104 @@ export default function Login() {
       style={styles.container} 
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <View style={styles.formContainer}>
-        <Text style={styles.title}>Welcome Back</Text>
-        <Text style={styles.subtitle}>Sign in to continue to Zippi.</Text>
+      <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+        <View style={styles.formContainer}>
+          <View style={styles.logoWrap}>
+            <Text style={styles.logoText}>Z</Text>
+          </View>
 
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>Email or Username</Text>
-          <TextInput 
-            style={styles.input}
-            value={identifier}
-            onChangeText={setIdentifier}
-            autoCapitalize="none"
-            placeholderTextColor="#6B7280"
-            placeholder="you@example.com or username"
-          />
+          <Text style={styles.title}>Welcome Back</Text>
+          <Text style={styles.subtitle}>Sign in to sync your study updates.</Text>
+
+          {error ? (
+            <View style={styles.errorBox}>
+              <View style={styles.errorDot} />
+              <Text style={styles.errorText}>{error}</Text>
+            </View>
+          ) : null}
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Email or Username</Text>
+            <TextInput 
+              style={styles.input}
+              value={identifier}
+              onChangeText={setIdentifier}
+              autoCapitalize="none"
+              placeholderTextColor="#6B7280"
+              placeholder="you@example.com or username"
+            />
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Password</Text>
+            <TextInput 
+              style={styles.input}
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry
+              placeholderTextColor="#6B7280"
+              placeholder="••••••••"
+            />
+          </View>
+
+          <TouchableOpacity 
+            style={[styles.button, loading && styles.buttonDisabled]} 
+            onPress={handleLogin}
+            disabled={loading}
+          >
+            <Text style={styles.buttonText}>{loading ? 'Signing in...' : 'Sign In'}</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity onPress={() => router.push('/register')} style={styles.link}>
+            <Text style={styles.linkText}>Don't have an account? <Text style={styles.linkAccent}>Join Zippi</Text></Text>
+          </TouchableOpacity>
         </View>
-
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>Password</Text>
-          <TextInput 
-            style={styles.input}
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-            placeholderTextColor="#6B7280"
-            placeholder="••••••••"
-          />
-        </View>
-
-        <TouchableOpacity 
-          style={styles.button} 
-          onPress={handleLogin}
-          disabled={loading}
-        >
-          <Text style={styles.buttonText}>{loading ? 'Signing in...' : 'Sign In'}</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity onPress={() => router.push('/register')} style={styles.link}>
-          <Text style={styles.linkText}>Don't have an account? <Text style={{color: '#60A5FA'}}>Register</Text></Text>
-        </TouchableOpacity>
-      </View>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#030712', justifyContent: 'center' },
-  formContainer: { padding: 24, width: '100%' },
-  title: { fontSize: 32, fontWeight: 'bold', color: 'white', marginBottom: 8 },
-  subtitle: { fontSize: 16, color: '#9CA3AF', marginBottom: 32 },
+  container: { flex: 1, backgroundColor: '#030712' },
+  scrollContent: { flexGrow: 1, justifyContent: 'center', paddingHorizontal: 20, paddingVertical: 24 },
+  formContainer: {
+    width: '100%',
+    maxWidth: 460,
+    alignSelf: 'center',
+    backgroundColor: '#020617',
+    borderWidth: 1,
+    borderColor: '#1F2937',
+    borderRadius: 16,
+    padding: 22,
+  },
+  logoWrap: {
+    width: 52,
+    height: 52,
+    borderRadius: 12,
+    backgroundColor: '#4F46E5',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  logoText: { color: 'white', fontSize: 26, fontWeight: '800' },
+  title: { fontSize: 34, fontWeight: '800', color: 'white', marginBottom: 8 },
+  subtitle: { fontSize: 15, color: '#9CA3AF', marginBottom: 24 },
+  errorBox: {
+    marginBottom: 16,
+    backgroundColor: 'rgba(239, 68, 68, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(239, 68, 68, 0.35)',
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  errorDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#F87171' },
+  errorText: { color: '#FCA5A5', fontSize: 13.5, fontWeight: '600', flex: 1 },
   inputGroup: { marginBottom: 20 },
-  label: { color: '#D1D5DB', marginBottom: 8, fontSize: 14, fontWeight: '500' },
+  label: { color: '#D1D5DB', marginBottom: 8, fontSize: 13, fontWeight: '600' },
   input: {
     backgroundColor: '#111827',
     borderWidth: 1,
@@ -111,13 +161,15 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   button: {
-    backgroundColor: '#2563EB',
-    padding: 16,
+    backgroundColor: '#4F46E5',
+    paddingVertical: 15,
     borderRadius: 12,
     alignItems: 'center',
-    marginTop: 12
+    marginTop: 8
   },
+  buttonDisabled: { opacity: 0.65 },
   buttonText: { color: 'white', fontWeight: 'bold', fontSize: 16 },
-  link: { marginTop: 20, alignItems: 'center' },
-  linkText: { color: '#9CA3AF', fontSize: 14 }
+  link: { marginTop: 18, alignItems: 'center' },
+  linkText: { color: '#9CA3AF', fontSize: 14 },
+  linkAccent: { color: '#E5E7EB', fontWeight: '800' },
 });
