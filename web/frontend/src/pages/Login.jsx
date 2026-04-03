@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import useAuthStore from '../store/authStore';
 import axios from 'axios';
-import { LogIn, Mail, Lock, Eye, EyeOff, CheckSquare, Square } from 'lucide-react';
+import { LogIn, Mail, Lock, Eye, EyeOff } from 'lucide-react';
 
 export default function Login() {
   const [identifier, setIdentifier] = useState('');
@@ -10,6 +10,7 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState({ identifier: '', password: '' });
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const login = useAuthStore((state) => state.login);
@@ -26,15 +27,28 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+
+    const nextFieldErrors = { identifier: '', password: '' };
+    const trimmedIdentifier = identifier.trim();
+
+    if (!trimmedIdentifier) nextFieldErrors.identifier = 'Please enter your email or username.';
+    if (!password) nextFieldErrors.password = 'Please enter your password.';
+
+    if (nextFieldErrors.identifier || nextFieldErrors.password) {
+      setFieldErrors(nextFieldErrors);
+      return;
+    }
+
+    setFieldErrors({ identifier: '', password: '' });
     setLoading(true);
 
     try {
       const baseUrl = (import.meta.env.VITE_API_URL || 'http://localhost:5000').replace(/\/api\/?$/, '');
-      const res = await axios.post(`${baseUrl}/api/auth/login`, { identifier, password });
+      const res = await axios.post(`${baseUrl}/api/auth/login`, { identifier: trimmedIdentifier, password });
 
       // Save or clear remembered identifier
       if (rememberMe) {
-        localStorage.setItem('zippi_saved_identifier', identifier);
+        localStorage.setItem('zippi_saved_identifier', trimmedIdentifier);
       } else {
         localStorage.removeItem('zippi_saved_identifier');
       }
@@ -42,7 +56,15 @@ export default function Login() {
       login(res.data.user, res.data.token, rememberMe);
       navigate('/dashboard');
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to login. Please try again.');
+      const apiError = err.response?.data?.error;
+
+      if (apiError === 'Email or username is required') {
+        setFieldErrors((prev) => ({ ...prev, identifier: 'Please enter your email or username.' }));
+      } else if (apiError === 'Password is required') {
+        setFieldErrors((prev) => ({ ...prev, password: 'Please enter your password.' }));
+      } else {
+        setError(apiError || 'Unable to sign in right now. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -119,9 +141,15 @@ export default function Login() {
                   className="w-full bg-gray-950 border border-gray-800 text-white rounded pl-11 pr-4 py-3.5 focus:outline-none   focus:border-blue-500 transition-all text-sm placeholder-gray-600 shadow-sm"
                   placeholder="you@example.com or username"
                   value={identifier}
-                  onChange={(e) => setIdentifier(e.target.value)}
+                  onChange={(e) => {
+                    setIdentifier(e.target.value);
+                    if (fieldErrors.identifier) {
+                      setFieldErrors((prev) => ({ ...prev, identifier: '' }));
+                    }
+                  }}
                 />
               </div>
+              {fieldErrors.identifier && <p className="text-xs text-red-400 ml-1">{fieldErrors.identifier}</p>}
             </div>
 
             {/* Password */}
@@ -137,12 +165,18 @@ export default function Login() {
                   className="w-full bg-gray-950 border border-gray-800 text-white rounded pl-11 pr-12 py-3.5 focus:outline-none   focus:border-blue-500 transition-all text-sm placeholder-gray-600 shadow-sm"
                   placeholder="••••••••"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    if (fieldErrors.password) {
+                      setFieldErrors((prev) => ({ ...prev, password: '' }));
+                    }
+                  }}
                 />
                 <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-500 hover:text-gray-300 transition-colors">
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
+              {fieldErrors.password && <p className="text-xs text-red-400 ml-1">{fieldErrors.password}</p>}
             </div>
 
             {/* Remember Me */}
