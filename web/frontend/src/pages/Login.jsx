@@ -43,7 +43,11 @@ export default function Login() {
     setLoading(true);
 
     try {
-      const baseUrl = (import.meta.env.VITE_API_URL || 'http://localhost:5000').replace(/\/api\/?$/, '');
+      const envApiUrl = import.meta.env.VITE_API_URL;
+      const runtimeFallback = window.location.hostname === 'localhost'
+        ? 'http://localhost:5000'
+        : 'https://zippi-uwwt.onrender.com';
+      const baseUrl = (envApiUrl || runtimeFallback).replace(/\/api\/?$/, '');
       const res = await axios.post(`${baseUrl}/api/auth/login`, { identifier: trimmedIdentifier, password });
 
       // Save or clear remembered identifier
@@ -56,12 +60,21 @@ export default function Login() {
       login(res.data.user, res.data.token, rememberMe);
       navigate('/dashboard');
     } catch (err) {
+      const status = err.response?.status;
       const apiError = err.response?.data?.error;
 
-      if (apiError === 'Email or username is required') {
+      if (!err.response) {
+        setError('Cannot connect to the server right now. Please check your internet and try again.');
+      } else if (apiError === 'Email or username is required') {
         setFieldErrors((prev) => ({ ...prev, identifier: 'Please enter your email or username.' }));
       } else if (apiError === 'Password is required') {
         setFieldErrors((prev) => ({ ...prev, password: 'Please enter your password.' }));
+      } else if (status === 401) {
+        setError('Invalid email/username or password. Please try again.');
+      } else if (status === 429) {
+        setError('Too many login attempts. Please wait a few minutes and try again.');
+      } else if (status >= 500) {
+        setError('Server is temporarily unavailable. Please try again shortly.');
       } else {
         setError(apiError || 'Unable to sign in right now. Please try again.');
       }
